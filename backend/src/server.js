@@ -2,7 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import Registration from './models/Registration.js';
 import eventsRouter from './routes/events.js';
 import clubsRouter from './routes/clubs.js';
 import healthRouter from './routes/health.js';
@@ -14,16 +13,6 @@ app.use(cors({ origin: (process.env.CLIENT_ORIGIN || 'http://localhost:5173,http
 app.use(express.json({ limit: '1mb' }));
 app.get('/', (_req, res) => res.json({ name: 'CampusConnect API', docs: '/api/health' }));
 app.use('/api/health', healthRouter);
-app.get('/api/students', async (_req, res, next) => {
-  try {
-    const students = await Registration.aggregate([
-      { $group: { _id: '$participantEmail', name: { $last: '$participantName' }, registrations: { $sum: 1 }, lastActivity: { $max: '$createdAt' } } },
-      { $sort: { name: 1 } },
-      { $project: { _id: 0, email: '$_id', name: 1, registrations: 1, lastActivity: 1 } },
-    ]);
-    res.json(students);
-  } catch (e) { next(e); }
-});
 app.use('/api/events', eventsRouter);
 app.use('/api/clubs', clubsRouter);
 app.use((req, res) => res.status(404).json({ message: `Route not found: ${req.method} ${req.path}` }));
